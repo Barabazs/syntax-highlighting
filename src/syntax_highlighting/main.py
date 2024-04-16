@@ -14,10 +14,10 @@ License: GNU AGPLv3 <https://www.gnu.org/licenses/agpl.html>
 
 from __future__ import unicode_literals
 
-import os
-import sys
-import re
 import json
+import os
+import re
+import sys
 
 from .consts import *  # import addon_path
 
@@ -26,19 +26,17 @@ from .consts import *  # import addon_path
 # other add-ons that might be shipping their own pygments
 sys.path.insert(0, os.path.join(addon_path, "libs"))
 
-from pygments import highlight
-from pygments.lexers import get_lexer_by_name, get_all_lexers
-from pygments.formatters import HtmlFormatter
-from pygments.util import ClassNotFound
-
-from aqt.qt import *
+from anki.hooks import addHook, wrap
 from aqt import mw
 from aqt.editor import Editor
+from aqt.qt import *
 from aqt.utils import showWarning
-from anki.hooks import addHook, wrap
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import get_all_lexers, get_lexer_by_name
+from pygments.util import ClassNotFound
 
 from .config import local_conf
-
 
 HOTKEY = local_conf["hotkey"]
 STYLE = local_conf["style"]
@@ -52,26 +50,33 @@ LIMITED_LANGS = local_conf["limitToLangs"]
 LANGUAGES_MAP = {lex[0]: lex[1][0] for lex in get_all_lexers()}
 
 
-ERR_LEXER = ("<b>Error</b>: Selected language not found.<br>"
-            "If you set a custom lang selection please make sure<br>"
-            "you typed all list entries correctly.")
+ERR_LEXER = (
+    "<b>Error</b>: Selected language not found.<br>"
+    "If you set a custom lang selection please make sure<br>"
+    "you typed all list entries correctly."
+)
 
-ERR_STYLE = ("<b>Error</b>: Selected style not found.<br>"
-            "If you set a custom style please make sure<br>"
-            "you typed it correctly.")
+ERR_STYLE = (
+    "<b>Error</b>: Selected style not found.<br>"
+    "If you set a custom style please make sure<br>"
+    "you typed it correctly."
+)
 
 
 # Misc
 
+
 def showError(msg, parent):
     showWarning(msg, title="Syntax Highlighting Error", parent=parent)
 
+
 # Synced options and corresponding dialogs
+
 
 def get_deck_name(mw):
     deck_name = None
     try:
-        deck_name = mw.col.decks.current()['name']
+        deck_name = mw.col.decks.current()["name"]
     except AttributeError:
         # No deck opened?
         deck_name = None
@@ -79,22 +84,22 @@ def get_deck_name(mw):
 
 
 def get_default_lang(mw):
-    addon_conf = mw.col.conf['syntax_highlighting_conf']
-    lang = addon_conf['lang']
-    if addon_conf['defaultlangperdeck']:
+    addon_conf = mw.col.conf["syntax_highlighting_conf"]
+    lang = addon_conf["lang"]
+    if addon_conf["defaultlangperdeck"]:
         deck_name = get_deck_name(mw)
-        if deck_name and deck_name in addon_conf['deckdefaultlang']:
-            lang = addon_conf['deckdefaultlang'][deck_name]
+        if deck_name and deck_name in addon_conf["deckdefaultlang"]:
+            lang = addon_conf["deckdefaultlang"][deck_name]
     return lang
 
 
 def set_default_lang(mw, lang):
-    addon_conf = mw.col.conf['syntax_highlighting_conf']
-    addon_conf['lang'] = lang  # Always update the overall default
-    if addon_conf['defaultlangperdeck']:
+    addon_conf = mw.col.conf["syntax_highlighting_conf"]
+    addon_conf["lang"] = lang  # Always update the overall default
+    if addon_conf["defaultlangperdeck"]:
         deck_name = get_deck_name(mw)
         if deck_name:
-            addon_conf['deckdefaultlang'][deck_name] = lang
+            addon_conf["deckdefaultlang"][deck_name] = lang
 
 
 class SyntaxHighlightingOptions(QDialog):
@@ -105,46 +110,45 @@ class SyntaxHighlightingOptions(QDialog):
         self.setupUi()
 
     def switch_linenos(self):
-        linenos_ = self.addon_conf['linenos']
-        self.addon_conf['linenos'] = not linenos_
+        linenos_ = self.addon_conf["linenos"]
+        self.addon_conf["linenos"] = not linenos_
 
     def switch_centerfragments(self):
-        centerfragments_ = self.addon_conf['centerfragments']
-        self.addon_conf['centerfragments'] = not centerfragments_
+        centerfragments_ = self.addon_conf["centerfragments"]
+        self.addon_conf["centerfragments"] = not centerfragments_
 
     def switch_defaultlangperdeck(self):
-        defaultlangperdeck_ = self.addon_conf['defaultlangperdeck']
-        self.addon_conf['defaultlangperdeck'] = not defaultlangperdeck_
+        defaultlangperdeck_ = self.addon_conf["defaultlangperdeck"]
+        self.addon_conf["defaultlangperdeck"] = not defaultlangperdeck_
 
     def switch_cssclasses(self):
-        cssclasses_ = self.addon_conf['cssclasses']
-        self.addon_conf['cssclasses'] = not cssclasses_
+        cssclasses_ = self.addon_conf["cssclasses"]
+        self.addon_conf["cssclasses"] = not cssclasses_
 
     def setupUi(self):
-        self.addon_conf = self.mw.col.conf['syntax_highlighting_conf']
+        self.addon_conf = self.mw.col.conf["syntax_highlighting_conf"]
 
-        linenos_label = QLabel('<b>Line numbers</b>')
-        linenos_checkbox = QCheckBox('')
-        linenos_checkbox.setChecked(self.addon_conf['linenos'])
+        linenos_label = QLabel("<b>Line numbers</b>")
+        linenos_checkbox = QCheckBox("")
+        linenos_checkbox.setChecked(self.addon_conf["linenos"])
         linenos_checkbox.stateChanged.connect(self.switch_linenos)
 
-        center_label = QLabel('<b>Center code fragments</b>')
-        center_checkbox = QCheckBox('')
-        center_checkbox.setChecked(self.addon_conf['centerfragments'])
+        center_label = QLabel("<b>Center code fragments</b>")
+        center_checkbox = QCheckBox("")
+        center_checkbox.setChecked(self.addon_conf["centerfragments"])
         center_checkbox.stateChanged.connect(self.switch_centerfragments)
 
-        cssclasses_label = QLabel('<b>Use CSS classes</b>')
-        cssclasses_checkbox = QCheckBox('')
-        cssclasses_checkbox.setChecked(self.addon_conf['cssclasses'])
+        cssclasses_label = QLabel("<b>Use CSS classes</b>")
+        cssclasses_checkbox = QCheckBox("")
+        cssclasses_checkbox.setChecked(self.addon_conf["cssclasses"])
         cssclasses_checkbox.stateChanged.connect(self.switch_cssclasses)
 
         defaultlangperdeck_label = QLabel(
-            '<b>Default to last language used per deck</b>')
-        defaultlangperdeck_checkbox = QCheckBox('')
-        defaultlangperdeck_checkbox.setChecked(
-            self.addon_conf['defaultlangperdeck'])
-        defaultlangperdeck_checkbox.stateChanged.connect(
-            self.switch_defaultlangperdeck)
+            "<b>Default to last language used per deck</b>"
+        )
+        defaultlangperdeck_checkbox = QCheckBox("")
+        defaultlangperdeck_checkbox.setChecked(self.addon_conf["defaultlangperdeck"])
+        defaultlangperdeck_checkbox.stateChanged.connect(self.switch_defaultlangperdeck)
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -159,7 +163,7 @@ class SyntaxHighlightingOptions(QDialog):
 
         self.setLayout(grid)
 
-        self.setWindowTitle('Syntax Highlighting Options')
+        self.setWindowTitle("Syntax Highlighting Options")
 
 
 def onOptionsCall(mw):
@@ -193,20 +197,23 @@ icon_path = os.path.join(addon_path, "icons", "button.png")
 
 # Editor widgets in Anki 2.0
 
+
 # This is taken from the aqt source code
-def add_plugin_button_(self,
-                       ed,
-                       name,
-                       func,
-                       text="",
-                       key=None,
-                       tip=None,
-                       height=False,
-                       width=False,
-                       icon=None,
-                       check=False,
-                       native=False,
-                       canDisable=True):
+def add_plugin_button_(
+    self,
+    ed,
+    name,
+    func,
+    text="",
+    key=None,
+    tip=None,
+    height=False,
+    width=False,
+    icon=None,
+    check=False,
+    native=False,
+    canDisable=True,
+):
 
     b = QPushButton(text)
 
@@ -245,12 +252,12 @@ def add_plugin_button_(self,
 def add_code_langs_combobox(self, func, previous_lang):
     combo = QComboBox()
     combo.addItem(previous_lang)
-    
+
     if LIMITED_LANGS:
         selection = LIMITED_LANGS
     else:
         selection = sorted(LANGUAGES_MAP.keys(), key=str.lower)
-    
+
     for lang in selection:
         combo.addItem(lang)
 
@@ -277,18 +284,24 @@ def onCodeHighlightLangSelect(ed, lang):
 
 # Editor widgets in Anki 2.1
 
-select_elm = ("""<select onchange='pycmd("shLang:" +"""
-              """ this.selectedOptions[0].text)' """
-              """style='vertical-align: top;'>{}</select>""")
+select_elm = (
+    """<select onchange='pycmd("shLang:" +"""
+    """ this.selectedOptions[0].text)' """
+    """style='vertical-align: top;'>{}</select>"""
+)
 
 
 def onSetupButtons21(buttons, ed):
     """Add buttons to Editor for Anki 2.1.x"""
     # no need for a lambda since onBridgeCmd passes current editor instance
     # to method anyway (cf. "self._links[cmd](self)")
-    b = ed.addButton(icon_path, "CH", highlight_code,
-                         tip="Paste highlighted code ({})".format(HOTKEY),
-                         keys=HOTKEY)
+    b = ed.addButton(
+        icon_path,
+        "CH",
+        highlight_code,
+        tip="Paste highlighted code ({})".format(HOTKEY),
+        keys=HOTKEY,
+    )
     buttons.append(b)
 
     # HTML "combobox"
@@ -323,19 +336,19 @@ def onBridgeCmd(ed, cmd, _old):
 
 
 def highlight_code(ed):
-    addon_conf = mw.col.conf['syntax_highlighting_conf']
+    addon_conf = mw.col.conf["syntax_highlighting_conf"]
 
     #  Do we want line numbers? linenos is either true or false according
     # to the user's preferences
-    linenos = addon_conf['linenos']
+    linenos = addon_conf["linenos"]
 
-    centerfragments = addon_conf['centerfragments']
+    centerfragments = addon_conf["centerfragments"]
 
     # Do we want to use css classes or have formatting directly in HTML?
     # Using css classes takes up less space and gives the user more
     # customization options, but is less self-contained as it requires
     # setting the styling on every note type where code is used
-    noclasses = not addon_conf['cssclasses']
+    noclasses = not addon_conf["cssclasses"]
 
     selected_text = ed.web.selectedText()
     if selected_text:
@@ -343,7 +356,7 @@ def highlight_code(ed):
         # '\u00A0' (non-breaking space). This character messes with the
         # formatter for highlighted code. To correct this, we replace all
         # '\u00A0' characters with regular space characters
-        code = selected_text.replace('\u00A0', ' ')
+        code = selected_text.replace("\u00A0", " ")
     else:
         clipboard = QApplication.clipboard()
         # Get the code from the clipboard
@@ -362,8 +375,8 @@ def highlight_code(ed):
     # Create html formatter object including flags for line nums and css classes
     try:
         my_formatter = HtmlFormatter(
-            linenos=linenos, noclasses=noclasses,
-            font_size=16, style=STYLE)
+            linenos=linenos, noclasses=noclasses, font_size=16, style=STYLE
+        )
     except ClassNotFound as e:
         print(e)
         showError(ERR_STYLE, parent=ed.parentWindow)
@@ -371,36 +384,37 @@ def highlight_code(ed):
 
     if linenos:
         if centerfragments:
-            pretty_code = "".join(["<center>",
-                                   highlight(code, my_lexer, my_formatter),
-                                   "</center><br>"])
+            pretty_code = "".join(
+                ["<center>", highlight(code, my_lexer, my_formatter), "</center><br>"]
+            )
         else:
-            pretty_code = "".join([highlight(code, my_lexer, my_formatter),
-                                   "<br>"])
+            pretty_code = "".join([highlight(code, my_lexer, my_formatter), "<br>"])
     # TODO: understand why this is neccessary
     else:
         if centerfragments:
-            pretty_code = "".join(["<center>",
-                                   highlight(code, my_lexer, my_formatter),
-                                   "</center><br>"])
+            pretty_code = "".join(
+                ["<center>", highlight(code, my_lexer, my_formatter), "</center><br>"]
+            )
         else:
-            pretty_code = "".join([highlight(code, my_lexer, my_formatter),
-                                   "<br>"])
+            pretty_code = "".join([highlight(code, my_lexer, my_formatter), "<br>"])
 
     pretty_code = process_html(pretty_code)
 
     # These two lines insert a piece of HTML in the current cursor position
-    ed.web.eval("document.execCommand('inserthtml', false, %s);"
-                % json.dumps(pretty_code))
+    ed.web.eval(
+        "document.execCommand('inserthtml', false, %s);" % json.dumps(pretty_code)
+    )
 
 
 def process_html(html):
     """Modify highlighter output to address some Anki idiosyncracies"""
     # 1.) "Escape" curly bracket sequences reserved to Anki's card template
     # system by placing an invisible html tag inbetween
-    for pattern, replacement in ((r"{{", r"{<!---->{"),
-                                 (r"}}", r"}<!---->}"),
-                                 (r"::", r":<!---->:")):
+    for pattern, replacement in (
+        (r"{{", r"{<!---->{"),
+        (r"}}", r"}<!---->}"),
+        (r"::", r":<!---->:"),
+    ):
         html = re.sub(pattern, replacement, html)
     return html
 

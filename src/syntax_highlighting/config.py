@@ -9,12 +9,12 @@ Copyright: (c) 2018 Glutanimate <https://glutanimate.com/>
 License: GNU AGPLv3 <https://www.gnu.org/licenses/agpl.html>
 """
 
-import os
 import io
+import os
 
-from aqt import mw
-from anki.utils import json
 from anki.hooks import addHook
+from anki.utils import json
+from aqt import mw
 
 from .consts import *
 
@@ -30,12 +30,14 @@ meta_path = os.path.join(addon_path, "meta.json")
 # Defaults conf
 # - we create a new item in mw.col.conf. This syncs the
 # options across machines (but not on mobile)
-default_conf = {'linenos': True,  # show numbers by default
-                'centerfragments': True,  # Use <center> when generating code fragments
-                'cssclasses': False,  # Use css classes instead of colors directly in html
-                'defaultlangperdeck': True,  # Default to last used language per deck
-                'deckdefaultlang': {},  # Map to store the default language per deck
-                'lang': 'Python'}  # default language is Python
+default_conf = {
+    "linenos": True,  # show numbers by default
+    "centerfragments": True,  # Use <center> when generating code fragments
+    "cssclasses": False,  # Use css classes instead of colors directly in html
+    "defaultlangperdeck": True,  # Default to last used language per deck
+    "deckdefaultlang": {},  # Map to store the default language per deck
+    "lang": "Python",
+}  # default language is Python
 
 ###############################################################
 
@@ -52,10 +54,10 @@ def sync_keys(tosync, ref):
 
 
 def sync_config_with_default(col):
-    if not 'syntax_highlighting_conf' in col.conf:
-        col.conf['syntax_highlighting_conf'] = default_conf
+    if not "syntax_highlighting_conf" in col.conf:
+        col.conf["syntax_highlighting_conf"] = default_conf
     else:
-        sync_keys(col.conf['syntax_highlighting_conf'], default_conf)
+        sync_keys(col.conf["syntax_highlighting_conf"], default_conf)
 
     # Mark collection state as modified, else config changes get lost unless
     # some unrelated action triggers the flush of collection data to db

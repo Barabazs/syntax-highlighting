@@ -9,8 +9,8 @@ Copyright: (c) 2018 Glutanimate <https://glutanimate.com/>
 License: GNU AGPLv3 <https://www.gnu.org/licenses/agpl.html>
 """
 
-import sys
 import os
+import sys
 
 sys_encoding = sys.getfilesystemencoding()
 addon_path = os.path.dirname(__file__)
