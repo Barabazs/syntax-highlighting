@@ -10,7 +10,6 @@
     "tags": "code programming syntax-highlighting editor",
     "conflicts": [],
     "targets": [
-        "anki20",
         "anki21"
     ]
 }
