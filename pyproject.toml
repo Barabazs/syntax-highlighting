@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "syntax-highlighting"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{ include = "syntax_highlighting", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aab = { extras = ["qt5", "qt6"], version = "^0.1.4" }
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.0"
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+exclude = "src/syntax_highlighting/libs"
+
+[tool.isort]
+profile = "black"
+skip_glob = "src/**/libs"
