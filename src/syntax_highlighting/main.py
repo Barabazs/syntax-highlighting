@@ -169,7 +169,7 @@ class SyntaxHighlightingOptions(QDialog):
 def onOptionsCall(mw):
     """Call settings dialog"""
     dialog = SyntaxHighlightingOptions(mw)
-    dialog.exec_()
+    dialog.exec()
 
 
 options_action = QAction("Syntax Highlighting Options ...", mw)
