@@ -1,58 +1,59 @@
-# -*- coding: utf-8 -*-
 """
     pygments.lexers.dylan
     ~~~~~~~~~~~~~~~~~~~~~
 
     Lexers for the Dylan language.
 
-    :copyright: Copyright 2006-2017 by the Pygments team, see AUTHORS.
+    :copyright: Copyright 2006-2023 by the Pygments team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 """
 
 import re
 
-from pygments.lexer import Lexer, RegexLexer, bygroups, do_insertions, default
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Generic, Literal
+from pygments.lexer import Lexer, RegexLexer, bygroups, do_insertions, \
+    default, line_re
+from pygments.token import Comment, Operator, Keyword, Name, String, \
+    Number, Punctuation, Generic, Literal, Whitespace
 
 __all__ = ['DylanLexer', 'DylanConsoleLexer', 'DylanLidLexer']
 
 
 class DylanLexer(RegexLexer):
     """
-    For the `Dylan <http://www.opendylan.org/>`_ language.
+    For the Dylan language.
 
     .. versionadded:: 0.7
     """
 
     name = 'Dylan'
+    url = 'http://www.opendylan.org/'
     aliases = ['dylan']
     filenames = ['*.dylan', '*.dyl', '*.intr']
     mimetypes = ['text/x-dylan']
 
     flags = re.IGNORECASE
 
-    builtins = set((
+    builtins = {
         'subclass', 'abstract', 'block', 'concrete', 'constant', 'class',
         'compiler-open', 'compiler-sideways', 'domain', 'dynamic',
         'each-subclass', 'exception', 'exclude', 'function', 'generic',
         'handler', 'inherited', 'inline', 'inline-only', 'instance',
         'interface', 'import', 'keyword', 'library', 'macro', 'method',
         'module', 'open', 'primary', 'required', 'sealed', 'sideways',
-        'singleton', 'slot', 'thread', 'variable', 'virtual'))
+        'singleton', 'slot', 'thread', 'variable', 'virtual'}
 
-    keywords = set((
+    keywords = {
         'above', 'afterwards', 'begin', 'below', 'by', 'case', 'cleanup',
         'create', 'define', 'else', 'elseif', 'end', 'export', 'finally',
         'for', 'from', 'if', 'in', 'let', 'local', 'otherwise', 'rename',
         'select', 'signal', 'then', 'to', 'unless', 'until', 'use', 'when',
-        'while'))
+        'while'}
 
-    operators = set((
+    operators = {
         '~', '+', '-', '*', '|', '^', '=', '==', '~=', '~==', '<', '<=',
-        '>', '>=', '&', '|'))
+        '>', '>=', '&', '|'}
 
-    functions = set((
+    functions = {
         'abort', 'abs', 'add', 'add!', 'add-method', 'add-new', 'add-new!',
         'all-superclasses', 'always', 'any?', 'applicable-method?', 'apply',
         'aref', 'aref-setter', 'as', 'as-lowercase', 'as-lowercase!',
@@ -86,7 +87,7 @@ class DylanLexer(RegexLexer):
         'subtype?', 'table-protocol', 'tail', 'tail-setter', 'third',
         'third-setter', 'truncate', 'truncate/', 'type-error-expected-type',
         'type-error-value', 'type-for-copy', 'type-union', 'union', 'values',
-        'vector', 'zero?'))
+        'vector', 'zero?'}
 
     valid_name = '\\\\?[\\w!&*<>|^$%@\\-+~?/=]+'
 
@@ -111,23 +112,23 @@ class DylanLexer(RegexLexer):
     tokens = {
         'root': [
             # Whitespace
-            (r'\s+', Text),
+            (r'\s+', Whitespace),
 
             # single line comment
             (r'//.*?\n', Comment.Single),
 
             # lid header
             (r'([a-z0-9-]+)(:)([ \t]*)(.*(?:\n[ \t].+)*)',
-                bygroups(Name.Attribute, Operator, Text, String)),
+                bygroups(Name.Attribute, Operator, Whitespace, String)),
 
             default('code')  # no header match, switch to code
         ],
         'code': [
             # Whitespace
-            (r'\s+', Text),
+            (r'\s+', Whitespace),
 
             # single line comment
-            (r'//.*?\n', Comment.Single),
+            (r'(//.*?)(\n)', bygroups(Comment.Single, Whitespace)),
 
             # multi-line comment
             (r'/\*', Comment.Multiline, 'comment'),
@@ -179,10 +180,10 @@ class DylanLexer(RegexLexer):
             (valid_name + ':', Keyword),
 
             # class names
-            (r'<' + valid_name + '>', Name.Class),
+            ('<' + valid_name + '>', Name.Class),
 
             # define variable forms.
-            (r'\*' + valid_name + '\*', Name.Variable.Global),
+            (r'\*' + valid_name + r'\*', Name.Variable.Global),
 
             # define constant forms.
             (r'\$' + valid_name, Name.Constant),
@@ -191,7 +192,7 @@ class DylanLexer(RegexLexer):
             (valid_name, Name),
         ],
         'comment': [
-            (r'[^*/]', Comment.Multiline),
+            (r'[^*/]+', Comment.Multiline),
             (r'/\*', Comment.Multiline, '#push'),
             (r'\*/', Comment.Multiline, '#pop'),
             (r'[*/]', Comment.Multiline)
@@ -227,28 +228,21 @@ class DylanLidLexer(RegexLexer):
     tokens = {
         'root': [
             # Whitespace
-            (r'\s+', Text),
+            (r'\s+', Whitespace),
 
             # single line comment
-            (r'//.*?\n', Comment.Single),
+            (r'(//.*?)(\n)', bygroups(Comment.Single, Whitespace)),
 
             # lid header
             (r'(.*?)(:)([ \t]*)(.*(?:\n[ \t].+)*)',
-             bygroups(Name.Attribute, Operator, Text, String)),
+             bygroups(Name.Attribute, Operator, Whitespace, String)),
         ]
     }
 
 
 class DylanConsoleLexer(Lexer):
     """
-    For Dylan interactive console output like:
-
-    .. sourcecode:: dylan-console
-
-        ? let a = 1;
-        => 1
-        ? a
-        => 1
+    For Dylan interactive console output.
 
     This is based on a copy of the RubyConsoleLexer.
 
@@ -258,16 +252,16 @@ class DylanConsoleLexer(Lexer):
     aliases = ['dylan-console', 'dylan-repl']
     filenames = ['*.dylan-console']
     mimetypes = ['text/x-dylan-console']
+    _example = 'dylan-console/console'
 
-    _line_re = re.compile('.*?\n')
-    _prompt_re = re.compile('\?| ')
+    _prompt_re = re.compile(r'\?| ')
 
     def get_tokens_unprocessed(self, text):
         dylexer = DylanLexer(**self.options)
 
         curcode = ''
         insertions = []
-        for match in self._line_re.finditer(text):
+        for match in line_re.finditer(text):
             line = match.group()
             m = self._prompt_re.match(line)
             if m is not None:
@@ -277,13 +271,11 @@ class DylanConsoleLexer(Lexer):
                 curcode += line[end:]
             else:
                 if curcode:
-                    for item in do_insertions(insertions,
-                                              dylexer.get_tokens_unprocessed(curcode)):
-                        yield item
+                    yield from do_insertions(insertions,
+                                             dylexer.get_tokens_unprocessed(curcode))
                     curcode = ''
                     insertions = []
                 yield match.start(), Generic.Output, line
         if curcode:
-            for item in do_insertions(insertions,
-                                      dylexer.get_tokens_unprocessed(curcode)):
-                yield item
+            yield from do_insertions(insertions,
+                                     dylexer.get_tokens_unprocessed(curcode))
