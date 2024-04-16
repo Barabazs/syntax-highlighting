@@ -20,6 +20,7 @@ import re
 import json
 
 from .consts import *  # import addon_path
+
 # always use shipped pygments library
 # FIXME: properly vendorize pygments, lest we interfere with
 # other add-ons that might be shipping their own pygments
@@ -37,11 +38,6 @@ from aqt.utils import showWarning
 from anki.hooks import addHook, wrap
 
 from .config import local_conf
-
-if anki21:
-    string = str
-else:
-    import string
 
 
 HOTKEY = local_conf["hotkey"]
@@ -186,9 +182,6 @@ def init_highlighter(ed, *args, **kwargs):
     previous_lang = get_default_lang(mw)
     ed.codeHighlightLangAlias = LANGUAGES_MAP.get(previous_lang, "")
 
-    if not anki21:
-        addWidgets20(ed, previous_lang)
-
 
 # Highlighter widgets
 
@@ -256,7 +249,7 @@ def add_code_langs_combobox(self, func, previous_lang):
     if LIMITED_LANGS:
         selection = LIMITED_LANGS
     else:
-        selection = sorted(LANGUAGES_MAP.keys(), key=string.lower)
+        selection = sorted(LANGUAGES_MAP.keys(), key=str.lower)
     
     for lang in selection:
         combo.addItem(lang)
@@ -268,25 +261,6 @@ def add_code_langs_combobox(self, func, previous_lang):
 
 QSplitter.add_plugin_button_ = add_plugin_button_
 QSplitter.add_code_langs_combobox = add_code_langs_combobox
-
-
-def addWidgets20(ed, previous_lang):
-    # Add the buttons to the Icon Box
-    splitter = QSplitter()
-    splitter.add_plugin_button_(ed,
-                                "highlight_code",
-                                lambda _: highlight_code(ed),
-                                key=HOTKEY,
-                                text="",
-                                icon=icon_path,
-                                tip=_("Paste highlighted code ({})".format(HOTKEY)),
-                                check=False)
-    splitter.add_code_langs_combobox(
-        lambda lang: onCodeHighlightLangSelect(ed, lang), previous_lang)
-    splitter.setFrameStyle(QFrame.Plain)
-    rect = splitter.frameRect()
-    splitter.setFrameRect(rect.adjusted(10, 0, -10, 0))
-    ed.iconsBox.addWidget(splitter)
 
 
 def onCodeHighlightLangSelect(ed, lang):
@@ -326,7 +300,7 @@ def onSetupButtons21(buttons, ed):
     if LIMITED_LANGS:
         selection = LIMITED_LANGS
     else:
-        selection = sorted(LANGUAGES_MAP.keys(), key=string.lower)
+        selection = sorted(LANGUAGES_MAP.keys(), key=str.lower)
 
     options.append(option_str.format(previous_lang))
     for lang in selection:
@@ -430,11 +404,11 @@ def process_html(html):
         html = re.sub(pattern, replacement, html)
     return html
 
+
 # Hooks and monkey-patches
 
 
-if anki21:
-    addHook("setupEditorButtons", onSetupButtons21)
-    Editor.onBridgeCmd = wrap(Editor.onBridgeCmd, onBridgeCmd, "around")
+addHook("setupEditorButtons", onSetupButtons21)
+Editor.onBridgeCmd = wrap(Editor.onBridgeCmd, onBridgeCmd, "around")
 
 Editor.__init__ = wrap(Editor.__init__, init_highlighter)
