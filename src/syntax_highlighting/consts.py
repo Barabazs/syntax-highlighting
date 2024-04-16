@@ -19,4 +19,7 @@ sys_encoding = sys.getfilesystemencoding()
 if anki21:
     addon_path = os.path.dirname(__file__)
 else:
-    addon_path = os.path.dirname(__file__).decode(sys_encoding)
+    try:
+        addon_path = os.path.dirname(__file__).decode(sys_encoding)
+    except AttributeError:
+        addon_path = os.path.dirname(__file__)
